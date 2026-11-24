@@ -617,10 +617,16 @@ export class TrackManager implements vscode.Disposable {
     this.finalizeChange()
   }
 
-  public clearActive(): void {
-    const track = this.getActiveTrack()
+  public clearTrack(id: string): void {
+    const track = this.tracks.get(id)
+    if (!track) return
+
     track.files = track.files.filter((f) => f.isPinned)
     this.finalizeChange()
+  }
+
+  public clearActive(): void {
+    this.clearTrack(this.getActiveTrack().id)
   }
 
   public isNameTaken(name: string): boolean {

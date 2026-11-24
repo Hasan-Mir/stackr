@@ -17,10 +17,10 @@ How the tree filters to pinned items, how items sort within a track, and how fil
 ## Decisions
 
 - `src/providers/stack-provider.ts` owns `_showPinnedOnly` state and broadcasts it via context keys.
-- `src/services/tree-builder.ts` owns sort weight calculation.
-- `src/services/context-key-service.ts` mirrors filter state to VS Code context keys for menu visibility.
-- Sort uses `Intl.Collator` with numeric sensitivity. Files like `2-foo.ts` and `10-foo.ts` order numerically, not lexically. Within equal weight, ordering is alphabetic by display name.
-- Pinned filter state is mirrored to a context key (`aiContextStacker.pinnedFilterActive`) so the toolbar button can swap its icon. The provider does not read the context key back. State is one-way out.
+- `src/services/tree-builder.ts` owns sort weight calculation and `sortOrder` (`name` | `tokensDesc`).
+- `src/services/context-key-service.ts` mirrors filter and sort state (`aiContextStacker.pinnedOnly`, `aiContextStacker.sortByTokens`) to VS Code context keys for menu visibility.
+- `src/commands/search-stack.ts` and `src/utils/fuzzy-match.ts` provide Quick Open style fuzzy search over staged files (with optional workspace membership check).
+- Sort uses `Intl.Collator` with numeric sensitivity. Files like `2-foo.ts` and `10-foo.ts` order numerically, not lexically. In `tokensDesc` mode, pinned items remain first and unpinned items sort by aggregated token count descending.
 - `togglePinnedOnly()` marks dirty and triggers a full refresh. `resort()` skips the dirty-mark when no filter is active and fires refresh directly. Splitting these prevents a back-to-back toggle from racing a stale resort.
 
 ## Hidden contracts

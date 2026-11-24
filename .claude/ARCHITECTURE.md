@@ -47,9 +47,13 @@ esbuild handles bundling. `tsc --noEmit` runs separately for type errors. Both r
 
 `ServiceRegistry` is constructed fresh on every activation and stores itself as a static `_instance`. `ServiceRegistry.disposeExisting()` runs first on activation to kill any zombie instance from a previous dev host session. Disposal runs in three tiers (foundation services first, then stateful services, then view providers) to prevent use-after-dispose errors during shutdown.
 
-### workspaceState for persistence
+### workspaceState or workspaceFile for persistence
 
-State is stored in VS Code's `workspaceState`, keyed as `aiContextStacker.tracks.v1`. This gives per-workspace isolation with no filesystem writes and no file-watching overhead. The tradeoff is a hard 100KB storage cap enforced in `PersistenceService`. Files that exceed the cap are not saved. A warning message is shown instead.
+By default, state is stored in VS Code's `workspaceState`, keyed as `aiContextStacker.tracks.v1`. This gives per-workspace isolation with no filesystem writes and no file-watching overhead, subject to a hard 100KB cap enforced in `PersistenceService`. Setting `aiContextStacker.storageMode` to `workspaceFile` writes tracks to `.vscode/stackr.json` instead, removing the 100KB limit and making track state portable via Git or sync.
+
+### Zero-dependency ZIP export
+
+`src/utils/zip-builder.ts` constructs ZIP archives using Node's built-in `zlib.deflateRawSync` and CRC-32 rather than adding a third-party archiving package, preserving zero runtime dependencies.
 
 ### Debounced, fingerprinted saves
 
@@ -69,5 +73,5 @@ State is stored in VS Code's `workspaceState`, keyed as `aiContextStacker.tracks
 
 ## Risks / open questions
 
-- The 100KB `workspaceState` cap is a hard wall with no migration path. Large workspaces with many staged files across many tracks could hit it.
+- The default `workspaceState` mode has a hard 100KB limit. Switching to `workspaceFile` (`.vscode/stackr.json`) avoids this limit, though automatic migration between storage modes requires saving after switching settings.
 - Token estimation is character-based approximation, not a real tokenizer. Counts are directionally correct but not model-accurate.

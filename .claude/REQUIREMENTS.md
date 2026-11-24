@@ -32,25 +32,24 @@ Developers using AI assistants need to assemble relevant file contents into a si
 
 - Making AI API calls or integrating with any external AI service
 - Editing file contents from within the extension
-- Git-aware staging or diff views (deferred)
-- Sharing tracks or context across workspaces (deferred)
-- Syncing state across machines
+- Inline diff views (deferred)
 
 ## MVP features
 
-1. Stage files: add files to the active track individually, by folder, or from open editors
-2. Remove files: remove staged files individually or by folder, or clear the entire stack
-3. Named tracks: create, rename, delete, and switch between named tracks
-4. Track ordering: reorder tracks via drag-and-drop or move-up/move-down commands
-5. Copy stack: copy combined content of the active stack to the clipboard
-6. Copy and clear: copy then immediately clear the stack in one action
+1. Stage files: add files individually, by folder, from open editors (all, unpinned, active group, or picker), from Git changes/diffs, or from Problems diagnostics
+2. Remove and clear: remove staged files individually or by folder, or clear unpinned files from the active stack or any track
+3. Search stack: fuzzy search staged files by name (and optionally check workspace files for stack membership)
+4. Named tracks: create, rename, delete, clear, and switch between named tracks, or open all files in a track
+5. Track ordering and transfer: reorder tracks via drag-and-drop or move-up/move-down, and copy or move staged files across tracks
+6. Copy and export: copy combined content or Context Map only to clipboard, copy and clear in one action, or export staged files as a ZIP archive
 7. Pin files: pinned files survive clear operations and remain until explicitly removed
-8. Token counts: per-file and total estimates, with heavy and critical files flagged by threshold
+8. Token counts: per-file and total estimates (optional toggle), with heavy and critical files flagged by threshold
 9. Status bar: show the active track name and total token count
 10. Preview: render the combined context in a webview panel before copying
 11. File lifecycle: auto-update or remove staged files when they are renamed or deleted on disk
-12. Folder sync: re-scan staged folders to pick up new files added since the folder was staged
-13. Filter: toggle a pinned-only view of the stack
+12. Folder sync and auto-reveal: re-scan staged folders for new files, and reveal the active editor file in the Staged Files view
+13. Filter and sort: toggle a pinned-only view, and sort by name or token count
+14. Portability: persist to `workspaceState` or `.vscode/stackr.json`, and export/import tracks as JSON
 
 ## Tech stack
 
@@ -62,7 +61,7 @@ Developers using AI assistants need to assemble relevant file contents into a si
 
 ## Constraints
 
-- `workspaceState` storage cap: 100KB hard limit per workspace
+- `workspaceState` storage cap: 100KB hard limit per workspace (bypassed when `storageMode` is set to `workspaceFile`)
 - Must work fully offline with no network access
-- No new runtime dependencies without strong justification, preferring VS Code native APIs
+- No new runtime dependencies without strong justification, preferring VS Code native APIs and Node built-ins
 - Must not affect VS Code startup time, so activation is event-driven

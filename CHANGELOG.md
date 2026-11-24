@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- open tabs: added `Add All Open Files (Exclude Pinned Tabs)` and `Add All Open Files in Active Group` commands
+- search: added `Search Files in Stack...` Quick Open style fuzzy search with optional workspace check (`In Stack` / `Not in Stack`)
+- tracks: added per-track `Clear Stack` inline hover icon and context menu command
+- export: added `Export Stack as Zip...` command to package staged files with workspace folder structure
+- staging: added Git changed, Git staged, Git branch diff, Problems, multi-selected editor tabs, and `Add Open Tabs to Stackr...` commands
+- tracks: added cross-track `Copy to Track...`, `Move to Track...`, drag-and-drop file transfer, and `Open All Files in Track`
+- persistence: added `.vscode/stackr.json` storage mode (`aiContextStacker.storageMode`) and portable JSON export/import commands
+- output: added `Copy Context Map Only`, `Toggle Token Estimation`, `Sort by Token Count` / `Sort by Name`, and `aiContextStacker.autoReveal`
+
+### Fixed
+
+- persistence: fixed fingerprinting so track order and metadata updates save reliably
+- scanner: fixed symlink detection using bitwise `vscode.FileType` masks
+
 ## [0.1.3] - 2026-03-12
 
 ### Changed

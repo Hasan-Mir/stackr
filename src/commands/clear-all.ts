@@ -5,7 +5,7 @@ import { StackProvider } from '../providers'
 import { ErrorHandler } from '../utils'
 import { Command, CommandDependencies } from './types'
 
-type ClearAction =
+export type ClearAction =
   | { type: 'empty'; message: string }
   | { type: 'allPinned'; message: string }
   | { type: 'confirm'; message: string }
@@ -38,9 +38,12 @@ async function handleClearAll(provider: StackProvider): Promise<void> {
   }
 }
 
-function determineClearAction(files: StagedFile[]): ClearAction {
+export function determineClearAction(files: StagedFile[], trackName?: string): ClearAction {
   if (files.length === 0) {
-    return { type: 'empty', message: 'Context stack is already empty' }
+    return {
+      type: 'empty',
+      message: trackName ? `Track "${trackName}" is already empty.` : 'Context stack is already empty',
+    }
   }
 
   const unpinnedCount = files.filter((f) => !f.isPinned).length
@@ -49,14 +52,17 @@ function determineClearAction(files: StagedFile[]): ClearAction {
   if (unpinnedCount === 0) {
     return {
       type: 'allPinned',
-      message: 'All files are pinned. Unpin them to clear.',
+      message: trackName
+        ? `All files in track "${trackName}" are pinned. Unpin them to clear.`
+        : 'All files are pinned. Unpin them to clear.',
     }
   }
 
+  const scope = trackName ? `track "${trackName}"` : 'context stack'
   const message =
     pinnedCount > 0
-      ? `Clear ${unpinnedCount} unpinned file(s)? (${pinnedCount} pinned files will remain)`
-      : `Clear all ${files.length} file(s) from context stack?`
+      ? `Clear ${unpinnedCount} unpinned file(s) from ${scope}? (${pinnedCount} pinned files will remain)`
+      : `Clear all ${files.length} file(s) from ${scope}?`
 
   return { type: 'confirm', message }
 }

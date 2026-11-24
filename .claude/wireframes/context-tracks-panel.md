@@ -23,9 +23,11 @@ Shown only on first install before any tracks exist. In practice the "Main" defa
 ## Behavior
 
 - Clicking a track switches the active stack. The star moves to the clicked track and the Staged Files panel updates
-- Double-clicking a track name opens an inline rename input
+- Inline hover icons on each track provide Rename, Clear Stack (`clear-all`), and Delete (`trash`, hidden when only one track remains)
+- Right-clicking a track opens a context menu with: Switch Track (if inactive), Rename Track, Open All Files in Track, Move Up / Move Down, Clear Stack, and Delete Track
+- Clear Stack removes unpinned files on that track while preserving pinned files, even for the last remaining track
 - Rename rejects duplicate names. The input reverts if the name is taken
 - `[+]` opens a name input. Pressing Enter creates the track and switches to it
 - Tracks cannot be deleted when only one remains. The `[✗]` button is hidden in that case
 - `[↑]` and `[↓]` move the track one position in the list. Both are hidden when at the boundary
-- Drag-and-drop reorders tracks. Dropping on a track inserts the dragged track above it
+- Drag-and-drop reorders tracks or accepts staged items dropped from Staged Files to move them into the target track

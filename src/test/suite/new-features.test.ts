@@ -1,11 +1,16 @@
 import * as assert from 'assert'
+import * as sinon from 'sinon'
 import * as vscode from 'vscode'
 
 import { parseCopiedTabPaths, resolveTargets } from '../../commands/add-file-context-menu'
 import { parseGitNameOnlyZ, parseGitPorcelainZ } from '../../commands/add-git-files'
+import { collectOpenTabUris } from '../../commands/add-open-files'
+import { determineClearAction } from '../../commands/clear-all'
+import { splitRelativePath } from '../../commands/search-stack'
 import { isStagedFolder, StagedFile } from '../../models'
+import { TrackManager } from '../../providers/track-manager'
 import { TreeBuilder } from '../../services'
-import { buildZipBuffer, ContentFormatter, crc32, normalizeZipEntryPath } from '../../utils'
+import { buildZipBuffer, ContentFormatter, crc32, normalizeZipEntryPath, scoreFuzzyMatch } from '../../utils'
 
 suite('Stackr New Features Test Suite', () => {
   suite('Zip Builder', () => {
@@ -182,6 +187,162 @@ suite('Stackr New Features Test Suite', () => {
       assert.ok(output.includes('nonexistent-a.ts'), 'Output should include first file path')
       assert.ok(output.includes('nonexistent-b.ts'), 'Output should include second file path')
       assert.ok(!output.includes('File: '), 'Output should not include file content blocks')
+    })
+  })
+
+  suite('Open Tabs Collection (Exclude Pinned & Active Group)', () => {
+    function makeTab(uri: vscode.Uri, isPinned: boolean): vscode.Tab {
+      return {
+        label: uri.path.split('/').pop() || '',
+        group: {} as vscode.TabGroup,
+        input: new vscode.TabInputText(uri),
+        isActive: false,
+        isDirty: false,
+        isPinned,
+        isPreview: false,
+      }
+    }
+
+    test('collects all tabs, excludes pinned tabs, or limits to active group', () => {
+      const a = vscode.Uri.file('/ws/a.ts')
+      const bPinned = vscode.Uri.file('/ws/b-pinned.ts')
+      const cGroup2 = vscode.Uri.file('/ws/c.ts')
+
+      const group1 = {
+        isActive: false,
+        viewColumn: 1,
+        activeTab: undefined,
+        tabs: [makeTab(a, false), makeTab(bPinned, true)],
+      }
+      const group2 = {
+        isActive: true,
+        viewColumn: 2,
+        activeTab: undefined,
+        tabs: [makeTab(cGroup2, false), makeTab(a, false)],
+      }
+      const tabGroups = { all: [group1, group2], activeTabGroup: group2 }
+
+      const allUris = collectOpenTabUris(tabGroups)
+      assert.deepStrictEqual(
+        allUris.map((u) => u.fsPath),
+        [a.fsPath, bPinned.fsPath, cGroup2.fsPath],
+      )
+
+      const unpinnedUris = collectOpenTabUris(tabGroups, { excludePinned: true })
+      assert.deepStrictEqual(
+        unpinnedUris.map((u) => u.fsPath),
+        [a.fsPath, cGroup2.fsPath],
+      )
+
+      const activeGroupUris = collectOpenTabUris(tabGroups, { activeGroupOnly: true })
+      assert.deepStrictEqual(
+        activeGroupUris.map((u) => u.fsPath),
+        [cGroup2.fsPath, a.fsPath],
+      )
+    })
+  })
+
+  suite('Fuzzy Search & Path Splitting', () => {
+    // cspell:ignore lpag
+    test('scoreFuzzyMatch matches subsequence lpag against LandingPage.tsx and path queries', () => {
+      const target = 'docs/src/LandingPage.tsx'
+      const landingScore = scoreFuzzyMatch('lpag', target)
+      const unrelatedScore = scoreFuzzyMatch('lpag', 'packages/cli/package.json')
+
+      assert.ok(landingScore !== undefined, 'lpag should match LandingPage.tsx')
+      assert.strictEqual(unrelatedScore, undefined)
+
+      assert.ok(scoreFuzzyMatch('src/lpag', target) !== undefined, 'src/lpag should match full relative path')
+      assert.ok(scoreFuzzyMatch('docs lpag', target) !== undefined, 'space-separated tokens should match')
+      assert.strictEqual(scoreFuzzyMatch('xyz', target), undefined)
+    })
+
+    test('splitRelativePath separates filename and directory across separators', () => {
+      assert.deepStrictEqual(splitRelativePath('docs/src/LandingPage.tsx'), {
+        fileName: 'LandingPage.tsx',
+        dirPath: 'docs/src',
+        relPath: 'docs/src/LandingPage.tsx',
+      })
+      assert.deepStrictEqual(splitRelativePath('docs\\src\\LandingPage.tsx'), {
+        fileName: 'LandingPage.tsx',
+        dirPath: 'docs\\src',
+        relPath: 'docs\\src\\LandingPage.tsx',
+      })
+      assert.deepStrictEqual(splitRelativePath('README.md'), {
+        fileName: 'README.md',
+        dirPath: '',
+        relPath: 'README.md',
+      })
+    })
+  })
+
+  suite('Track Clear Stack', () => {
+    test('determineClearAction reports empty, allPinned, and confirm states for named tracks', () => {
+      assert.deepStrictEqual(determineClearAction([], 'docs'), {
+        type: 'empty',
+        message: 'Track "docs" is already empty.',
+      })
+
+      const pinnedFile: StagedFile = {
+        type: 'file',
+        uri: vscode.Uri.file('/ws/pinned.ts'),
+        label: 'pinned.ts',
+        isPinned: true,
+      }
+      const normalFile: StagedFile = {
+        type: 'file',
+        uri: vscode.Uri.file('/ws/normal.ts'),
+        label: 'normal.ts',
+        isPinned: false,
+      }
+
+      assert.deepStrictEqual(determineClearAction([pinnedFile], 'docs'), {
+        type: 'allPinned',
+        message: 'All files in track "docs" are pinned. Unpin them to clear.',
+      })
+
+      const mixedAction = determineClearAction([pinnedFile, normalFile], 'docs')
+      assert.strictEqual(mixedAction.type, 'confirm')
+      assert.ok(mixedAction.message.includes('track "docs"'))
+      assert.ok(mixedAction.message.includes('1 pinned files will remain'))
+    })
+
+    test('TrackManager.clearTrack clears unpinned files on target track while keeping pinned files', () => {
+      const sandbox = sinon.createSandbox()
+      const persistenceMock = {
+        saveImmediate: sandbox.stub().resolves(),
+        requestSave: sandbox.stub(),
+        clear: sandbox.stub().resolves(),
+      }
+      const hydrationMock = {
+        hydrate: sandbox.stub().resolves(null),
+      }
+      const contextMock = {
+        globalState: { get: sandbox.stub(), update: sandbox.stub().resolves() },
+        extensionPath: '/mock/path',
+        subscriptions: [],
+      }
+
+      const manager = new TrackManager(contextMock as any, persistenceMock as any, hydrationMock as any)
+      try {
+        const secondaryId = manager.createTrack('Docs', false)
+        const secondary = manager.getTrackById(secondaryId)!
+        secondary.files.push(
+          { type: 'file', uri: vscode.Uri.file('/ws/keep.ts'), label: 'keep.ts', isPinned: true },
+          { type: 'file', uri: vscode.Uri.file('/ws/drop.ts'), label: 'drop.ts', isPinned: false },
+        )
+
+        manager.clearTrack(secondaryId)
+
+        assert.strictEqual(manager.getActiveTrack().id, 'default', 'Active track must remain unchanged')
+        assert.deepStrictEqual(
+          secondary.files.map((f) => f.label),
+          ['keep.ts'],
+        )
+      } finally {
+        manager.dispose()
+        sandbox.restore()
+      }
     })
   })
 })

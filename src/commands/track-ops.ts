@@ -1,8 +1,9 @@
 import * as vscode from 'vscode'
 
 import { ContextTrack } from '../models'
-import { TrackManager } from '../providers'
+import { StackProvider, TrackManager } from '../providers'
 import { ErrorHandler } from '../utils'
+import { determineClearAction } from './clear-all'
 import { Command, CommandDependencies } from './types'
 
 interface TrackQuickPick extends vscode.QuickPickItem {
@@ -10,7 +11,7 @@ interface TrackQuickPick extends vscode.QuickPickItem {
 }
 
 export function getTrackCommands(deps: CommandDependencies): Command[] {
-  const { trackManager } = deps.services
+  const { trackManager, stackProvider } = deps.services
   const { tracksView } = deps.views
 
   return [
@@ -30,6 +31,13 @@ export function getTrackCommands(deps: CommandDependencies): Command[] {
       execute: (item?: ContextTrack) => {
         const action = () => handleRenameTrack(trackManager, tracksView, item)
         return ErrorHandler.safeExecute('Rename Track', action)()
+      },
+    },
+    {
+      id: 'aiContextStacker.clearTrack',
+      execute: (item?: ContextTrack) => {
+        const action = () => handleClearTrack(trackManager, stackProvider, tracksView, item)
+        return ErrorHandler.safeExecute('Clear Track', action)()
       },
     },
     {
@@ -111,6 +119,32 @@ async function handleRenameTrack(
 
   if (name) {
     manager.renameTrack(target.id, name.trim())
+  }
+}
+
+async function handleClearTrack(
+  manager: TrackManager,
+  stackProvider: StackProvider,
+  view: vscode.TreeView<ContextTrack>,
+  item?: ContextTrack,
+): Promise<void> {
+  const target = resolveTargetTrack(manager, view, item)
+  const action = determineClearAction(target.files, target.name)
+
+  if (action.type === 'empty' || action.type === 'allPinned') {
+    void vscode.window.showInformationMessage(action.message)
+    return
+  }
+
+  const answer = await vscode.window.showWarningMessage(action.message, { modal: true }, 'Confirm')
+
+  if (answer === 'Confirm') {
+    if (target.id === manager.getActiveTrack().id) {
+      stackProvider.clear()
+    } else {
+      manager.clearTrack(target.id)
+    }
+    void vscode.window.showInformationMessage(`Cleared track "${target.name}"`)
   }
 }
 

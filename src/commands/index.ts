@@ -22,6 +22,7 @@ import { getRemoveFilePickerCommands } from './remove-file-picker'
 import { getRemoveFolderPickerCommands } from './remove-folder-picker'
 import { getRevealInExplorerCommands } from './reveal-in-explorer'
 import { getRevealInViewCommands } from './reveal-in-view'
+import { getSearchStackCommands } from './search-stack'
 import { getSelectAllCommands } from './select-all'
 import { getOpenSettingsCommands } from './settings'
 import { getTogglePinCommands } from './toggle-pin'
@@ -47,6 +48,7 @@ export function registerAllCommands(deps: CommandDependencies): void {
     getTogglePinCommands,
     getUnpinAllCommands,
     getClearAllCommands,
+    getSearchStackCommands,
     getSelectAllCommands,
     getRefreshStackCommands,
 
