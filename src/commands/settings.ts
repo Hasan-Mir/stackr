@@ -31,5 +31,23 @@ export function getOpenSettingsCommands(_deps: CommandDependencies): Command[] {
         )
       },
     },
+    {
+      id: 'aiContextStacker.toggleSkipLockfiles',
+      execute: async () => {
+        const config = vscode.workspace.getConfiguration('aiContextStacker')
+        const current = config.get<boolean>('export.skipLockfiles', true)
+        const next = !current
+        const target = vscode.workspace.workspaceFolders?.length
+          ? vscode.ConfigurationTarget.Workspace
+          : vscode.ConfigurationTarget.Global
+
+        await config.update('export.skipLockfiles', next, target)
+        void vscode.window.showInformationMessage(
+          next
+            ? 'Stackr: Lockfiles will be skipped during text export.'
+            : 'Stackr: Lockfiles will be included during text export.',
+        )
+      },
+    },
   ]
 }

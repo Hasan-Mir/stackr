@@ -12,6 +12,7 @@ import { getCopyAllCommands } from './copy-all'
 import { getCopyAndClearCommands } from './copy-and-clear'
 import { getCopyFileCommands } from './copy-file'
 import { getDataPortabilityCommands } from './data-portability'
+import { getExportStackTextCommands } from './export-stack-text'
 import { getExportStackZipCommands } from './export-stack-zip'
 import { getFilterCommands } from './filter-commands'
 import { getOpenTrackFilesCommands } from './open-track-files'
@@ -55,6 +56,7 @@ export function registerAllCommands(deps: CommandDependencies): void {
     getCopyAllCommands,
     getCopyAndClearCommands,
     getCopyFileCommands,
+    getExportStackTextCommands,
     getExportStackZipCommands,
 
     getTrackCommands,

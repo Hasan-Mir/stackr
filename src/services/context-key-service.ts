@@ -27,6 +27,14 @@ export class ContextKeyService implements vscode.Disposable {
     this.set('aiContextStacker.sortByTokens', active)
   }
 
+  public updateSkipLockfiles(skip: boolean): void {
+    this.set('aiContextStacker.skipLockfiles', skip)
+  }
+
+  public updateEnableTokenEstimation(enabled: boolean): void {
+    this.set('aiContextStacker.enableTokenEstimation', enabled)
+  }
+
   public updateFolderState(hasFolders: boolean): void {
     this.set('aiContextStacker.hasFolders', hasFolders)
   }

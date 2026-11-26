@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 - search: added `Search Files in Stack...` Quick Open style fuzzy search with optional workspace check (`In Stack` / `Not in Stack`)
 - tracks: added per-track `Clear Stack` inline hover icon and context menu command
 - export: added `Export Stack as Zip...` command to package staged files with workspace folder structure
+- export: added `Export Stack as Text...` command with QuickPick presets (split chunks, source-only, all tracked files), 5-tier priority sorting, whole-file boundary chunking, and `aiContextStacker.export.*` settings
+- export: added `Skip Lockfiles in Export` menu toggle and >150 KB warning with quick export actions on `Copy Stack`
 - staging: added Git changed, Git staged, Git branch diff, Problems, multi-selected editor tabs, and `Add Open Tabs to Stackr...` commands
 - tracks: added cross-track `Copy to Track...`, `Move to Track...`, drag-and-drop file transfer, and `Open All Files in Track`
 - persistence: added `.vscode/stackr.json` storage mode (`aiContextStacker.storageMode`) and portable JSON export/import commands
@@ -19,6 +21,7 @@ All notable changes to this project will be documented in this file.
 
 - persistence: fixed fingerprinting so track order and metadata updates save reliably
 - scanner: fixed symlink detection using bitwise `vscode.FileType` masks
+- formatter: fixed extensionless code fence tags (e.g. `LICENSE`) and expanded outer Markdown fences past nested backtick runs
 
 ## [0.1.3] - 2026-03-12
 

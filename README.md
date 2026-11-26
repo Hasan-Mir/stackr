@@ -70,6 +70,7 @@ Copied output optionally includes an ASCII directory tree:
 ```
 
 - **Copy Context Map Only:** copy just the ASCII tree without reading file contents
+- **Export Stack as Text:** export staged files as priority-ordered, size-bounded `.txt` chunks (split on whole-file boundaries) with QuickPick presets (split chunks, source-only, or all tracked files)
 - **Export Stack as Zip:** package all staged files into a `.zip` archive mirroring their workspace paths
 
 ### Token warnings
@@ -100,7 +101,7 @@ Additional commands available from the Command Palette (`Stackr: ...`) and view 
 - **Staging:** `Add All Open Files`, `Add All Open Files (Exclude Pinned Tabs)`, `Add All Open Files in Active Group`, `Add Open Tabs to Stackr...`, `Add All Git Changed Files`, `Add Git Staged Files`, `Add Git Files Changed vs Branch...`, `Add Files with Problems...`
 - **Search and sorting:** `Search Files in Stack...`, `Sort by Token Count`, `Sort by Name`, `Show Pinned Files Only`, `Show All Files`
 - **Tracks:** `Clear Stack` (per track), `Open All Files in Track`, `Copy to Track...`, `Move to Track...`
-- **Output and portability:** `Copy Context Map Only`, `Toggle Token Estimation`, `Export Stack as Zip...`, `Export Stackr Data...`, `Import Stackr Data...`
+- **Output and portability:** `Copy Context Map Only`, `Toggle Token Estimation`, `Skip Lockfiles in Export`, `Export Stack as Text...`, `Export Stack as Zip...`, `Export Stackr Data...`, `Import Stackr Data...`
 
 ## Settings
 
@@ -121,6 +122,10 @@ All settings are prefixed with `aiContextStacker` in `settings.json`.
 | `aiContextStacker.includeFileContents`    | `true`            | Include file contents in copied output.                                        |
 | `aiContextStacker.showFileContentsHeader` | `true`            | Show the header above file contents.                                           |
 | `aiContextStacker.fileContentsText`       | `# File Contents` | Custom header text for file contents.                                          |
+| `aiContextStacker.export.maxChunkBytes`   | `140000`          | Max UTF-8 bytes per exported text chunk (`0` for a single unbounded file).     |
+| `aiContextStacker.export.excludePatterns` | `[]`              | Additional glob patterns excluded from text context exports.                   |
+| `aiContextStacker.export.priorityOrdering`| `true`            | Sort exported files by 5-tier signal priority (manifests and code before docs).|
+| `aiContextStacker.export.skipLockfiles`   | `true`            | Skip generated dependency lockfiles during text context export.                |
 | `aiContextStacker.logLevel`               | `INFO`            | Output channel verbosity. Options: `DEBUG`, `INFO`, `WARN`, `ERROR`.           |
 
 ## Known limitations

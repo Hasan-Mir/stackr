@@ -3,6 +3,8 @@ APOS
 backticked
 canon
 changelogithub
+chunked
+chunking
 civis
 cloudern
 codicons
@@ -18,12 +20,16 @@ eslintrc
 frontmatter
 l10n
 lintstagedrc
+lockfile
+lockfiles
 nums
 overfitted
 overfitting
 parallelizable
 pipefail
+podfile
 prettierrc
+pubspec
 quickpick
 regen
 Rescan
@@ -32,8 +38,10 @@ retargeted
 scannability
 shellcheck
 shfmt
+shrinkwrap
 sidebar
 subfolders
+unbounded
 undercount
 vscode
 vsix

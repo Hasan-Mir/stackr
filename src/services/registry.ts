@@ -37,6 +37,9 @@ export class ServiceRegistry implements vscode.Disposable {
     this.hydrationService = new HydrationService(this.persistenceService)
     this.ignoreManager = new IgnoreManager()
     this.contextKeyService = new ContextKeyService()
+    this.contextKeyService.updateSkipLockfiles(
+      vscode.workspace.getConfiguration('aiContextStacker').get<boolean>('export.skipLockfiles', true),
+    )
     this.treeBuilder = new TreeBuilder()
 
     this.trackManager = new TrackManager(context, this.persistenceService, this.hydrationService)

@@ -2,7 +2,14 @@ import * as vscode from 'vscode'
 
 import { StagedFile } from '../models'
 import { StackProvider } from '../providers'
-import { ClipboardOps, ContentFormatter, ErrorHandler, FormatOptions } from '../utils'
+import {
+  ClipboardOps,
+  ContentFormatter,
+  ErrorHandler,
+  FormatOptions,
+  LARGE_EXPORT_WARNING_BYTES,
+  TokenEstimator,
+} from '../utils'
 import { Command, CommandDependencies } from './types'
 
 export function getCopyAllCommands(deps: CommandDependencies): Command[] {
@@ -43,9 +50,36 @@ async function handleCopyAll(provider: StackProvider): Promise<void> {
         await ClipboardOps.copyText(result, `${files.length} files`, () => {
           void vscode.commands.executeCommand('aiContextStacker.statusBar.showSuccess')
         })
+        notifyIfLargeContext(result)
       }
     },
   )
+}
+
+function notifyIfLargeContext(content: string): void {
+  const byteLength = Buffer.byteLength(content, 'utf8')
+  if (byteLength <= LARGE_EXPORT_WARNING_BYTES) {
+    return
+  }
+
+  const sizeKB = (byteLength / 1024).toFixed(1)
+  const tokensLabel = TokenEstimator.format(TokenEstimator.measure(content))
+  const splitAction = 'Export as Split Chunks...'
+  const sourceOnlyAction = 'Export Source Only...'
+
+  void vscode.window
+    .showWarningMessage(
+      `Copied context is ${sizeKB} KB (${tokensLabel}), which may be truncated by LLM single-file attachment limits (~150 KB).`,
+      splitAction,
+      sourceOnlyAction,
+    )
+    .then((selection) => {
+      if (selection === splitAction) {
+        void vscode.commands.executeCommand('aiContextStacker.exportStackText', 'splitChunks')
+      } else if (selection === sourceOnlyAction) {
+        void vscode.commands.executeCommand('aiContextStacker.exportStackText', 'sourceOnly')
+      }
+    })
 }
 
 async function handleCopyContextMap(provider: StackProvider): Promise<void> {

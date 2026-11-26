@@ -149,6 +149,30 @@
           ],
           "default": "name",
           "description": "Sort order for items in the Staged Files view."
+        },
+        "aiContextStacker.export.maxChunkBytes": {
+          "type": "integer",
+          "default": 140000,
+          "minimum": 0,
+          "description": "Maximum UTF-8 byte size per exported text chunk (~140 KB default for LLM attachments). Set to 0 for a single unbounded file."
+        },
+        "aiContextStacker.export.excludePatterns": {
+          "type": "array",
+          "default": [],
+          "description": "Additional glob patterns excluded from text context exports (e.g. 'docs/**', '**/*.test.*').",
+          "items": {
+            "type": "string"
+          }
+        },
+        "aiContextStacker.export.priorityOrdering": {
+          "type": "boolean",
+          "default": true,
+          "description": "Sort exported files by signal priority (manifests/configs, core source, other code, tests, docs/changelogs) so high-signal code appears first."
+        },
+        "aiContextStacker.export.skipLockfiles": {
+          "type": "boolean",
+          "default": true,
+          "description": "Skip generated dependency lockfiles (package-lock.json, yarn.lock, pnpm-lock.yaml, Cargo.lock, etc.) during text context export."
         }
       }
     },
@@ -300,6 +324,12 @@
         "icon": "$(export)"
       },
       {
+        "command": "aiContextStacker.exportStackText",
+        "title": "Export Stack as Text...",
+        "category": "Stackr",
+        "icon": "$(file-text)"
+      },
+      {
         "command": "aiContextStacker.exportStackZip",
         "title": "Export Stack as Zip...",
         "category": "Stackr",
@@ -441,6 +471,12 @@
         "title": "Toggle Token Estimation",
         "category": "Stackr",
         "icon": "$(dashboard)"
+      },
+      {
+        "command": "aiContextStacker.toggleSkipLockfiles",
+        "title": "Skip Lockfiles in Export",
+        "category": "Stackr",
+        "toggled": "aiContextStacker.skipLockfiles"
       },
       {
         "command": "aiContextStacker.unpinAll",
@@ -653,6 +689,11 @@
           "group": "2_secondary@3"
         },
         {
+          "command": "aiContextStacker.exportStackText",
+          "when": "view == aiContextStackerView && aiContextStacker.hasFiles",
+          "group": "2_secondary@4a"
+        },
+        {
           "command": "aiContextStacker.exportStackZip",
           "when": "view == aiContextStackerView && aiContextStacker.hasFiles",
           "group": "2_secondary@4"
@@ -695,19 +736,24 @@
           "group": "4_config@1"
         },
         {
-          "command": "aiContextStacker.exportData",
+          "command": "aiContextStacker.toggleSkipLockfiles",
           "when": "view == aiContextStackerView",
           "group": "4_config@2"
         },
         {
-          "command": "aiContextStacker.importData",
+          "command": "aiContextStacker.exportData",
           "when": "view == aiContextStackerView",
           "group": "4_config@3"
         },
         {
-          "command": "aiContextStacker.openSettings",
+          "command": "aiContextStacker.importData",
           "when": "view == aiContextStackerView",
           "group": "4_config@4"
+        },
+        {
+          "command": "aiContextStacker.openSettings",
+          "when": "view == aiContextStackerView",
+          "group": "4_config@5"
         },
         {
           "//": "--- Staged Files: Overflow Menu (Group 9: Danger) ---",
